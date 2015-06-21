@@ -1,4 +1,8 @@
 #!/usr/bin/python
+
+#This file has created by Dharavath Suresh. It basically adds the basic "Hello World" system call 
+#in the linux kernel in ubuntu
+
 import subprocess
 import commands
 import os
