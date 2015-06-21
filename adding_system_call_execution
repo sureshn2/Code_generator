@@ -1,0 +1,41 @@
+#!/bin/bash
+
+#This file has written by Dharavath Suresh 
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------#
+			# this script executes from the 'syscall_writer_copy.py' file along with one parameter( path of the source tree )  
+#-----------------------------------------------------------------------------------------------------------------------------------------#
+
+#dire=read("enter the source tree directory : ")
+#echo "enter the source tree directory : "
+#read dire
+#cd dire
+#echo $0
+#echo $1
+cd $1
+echo "connected to :  $1"
+#cd dire
+echo `pwd`
+cp /boot/config-`uname -r` .config
+make oldconfig
+make clean
+#name=read("give the name for the custom kernel : ")
+echo "give the name for the custom kernel : "
+read name
+make -j `getconf _NPROCESSORS_ONLN` deb-pkg LOCALVERSION=-$name
+#make -j `getconf _NPROCESSORS_ONLN` deb-pkg LOCALVERSION=-custom    this is for backup
+cd ..
+sudo dpkg -i *.deb
+echo "kernel installed successfully, wanted to reboot y/n"
+read y
+echo y
+#-o [ $y -eq 'Y' ]
+if [ "y" = "$y" ] || [  "Y" = "$y" ]
+then
+	echo "system is going to reboot...."
+	sudo init 6
+	#echo "command executed properly"
+else
+	echo "returning to the main file..."
+fi
