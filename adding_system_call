@@ -1,0 +1,156 @@
+#!/usr/bin/python
+import subprocess
+import commands
+import os
+from sys import exit
+
+def writ(fname,string):
+	fp = open(fname,"w")
+	fp.write(string)
+	fp.close()
+		
+path=raw_input("enter the path name :  ")
+os.chdir(path)
+dire=raw_input("enter directory name : ")
+os.mkdir(dire)
+os.chdir(dire)
+print "connected to : ",os.getcwd()
+#print os.getcwd()
+
+
+
+fp=open(str(dire)+".c","w")
+fp.write("#include<linux/kernel.h>\
+\n\n//include headers here......\
+\n\nasmlinkage long sys_"+str(dire)+"(void)\
+\n{\n\tprintk(KERN_ALERT \"HEllo KErnel\");\
+\n\n\t//your code goes here....\
+\n\n\treturn 514;\
+\n}")
+fp.close();
+
+commands.getstatusoutput("/usr/bin/gedit "+str(dire)+".c")
+
+fp = open("Makefile","w")
+fp.write("obj-y:="+str(dire)+".o")
+fp.close()
+print "write into the file ......"
+confirm=raw_input("writing into file comleted y/n  :  ")
+if (confirm=='y' or confirm=='Y'):
+	os.chdir(path)
+	print "connected to : ",os.getcwd()
+	string=""
+	fp=open("Makefile","r")
+	for line in fp:
+	
+		if "core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/" in line:
+			line =  "core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/"+" "+dire+"\n"
+			
+			'''
+			if dire not in line:
+				line = line+" "+dire+"/"+"\n"
+			else:
+				print "this directory name already exists in the \'Makefile\' core-y, script exiting..."
+				exit()
+		'''
+		string+=line
+	fp.close()
+	#---------------> write into Makefile here ---------->
+	writ("Makefile",string)
+
+
+	string=""
+	os.chdir(path+"/arch/x86/syscalls")
+	print "connected to : ",os.getcwd()
+	fp = open("syscall_64.tbl","r")
+	count=0
+	flag=0
+	for line in fp:
+		try:
+			#print line
+			#print line[0]+line[1]+line[1]
+			if int(line[0]) == 0:
+				count+=1
+				flag=1
+				string+=line
+				for line in fp:
+					if( int(line.split()[0]) == count):
+						count+=1
+						string+=line
+						#print count
+					
+			
+			'''
+			if (str(line[0])+str(line[1])+str(line[2]))=="317":
+				print str(line[0])+str(line[1])+str(line[2])
+			
+				print "enter the syscall \nnumber abi		name 		sys_call_name  : "
+			
+				in_syscall=raw_input()
+				print in_syscall
+				#line=line+"\n318 common		hello			sys_hello\n"
+				#line=+line+"\n"+in_syscall+"\n"
+				line+=in_syscall+"\n"
+				'''
+		except:
+			if flag==1:
+				print count
+				#print "enter the syscall "+str(count)+" \nnumber abi		name 		sys_call_name  : "
+				#in_syscall=raw_input()
+				print "adding into the system call table with system call nummber  : ",count
+				in_syscall=str(count)+"	"+"common	"+dire+"		"+"sys_"+dire
+				print in_syscall
+				line+=in_syscall+"\n"
+				flag=0
+			#print " " #"onece interupted"
+		string+=line
+	fp.close()
+
+	#---------------> write into syscall_64.tbl here ---------->
+	writ("syscall_64.tbl",string)
+
+
+	os.chdir(path+"/include/linux")
+	print "connected to : ",os.getcwd()
+	fp = open("syscalls.h","r")
+	#check="asmlinkage long sys_seccomp("
+	string=""
+	for line in fp:
+		#if "asmlinkage long sys_seccomp(" in line:
+		string+=line
+		#string+="asmlinkage long sys_hello(void);\n"
+		#else:
+		#	string+=line	
+	fp.close()
+	string = string[:-7]
+	#string+='\n'
+	print "\nwriting the syscall defination....\n "
+	in_syscall="asmlinkage long sys_"
+	#in_syscall+=raw_input()
+	in_syscall+=dire
+	if "yes"==raw_input("\nhave any parameters, yes/no  : "):
+		in_syscall+="("+raw_input()+");\n"
+	else:
+		in_syscall+="(void);\n"
+	string+=in_syscall
+	string+="#endif"
+
+
+	#---------------> write into syscalls.h here ---------->
+	writ("syscalls.h",string)
+	
+	true = raw_input("\nwanted to compile the code ,  yes/no  :")
+	if (true == "yes") or (true== "YES") or (true=="Yes"):
+		subprocess.call('/home/lunako/scripts/syscall_write_shell.sh '+" "+str(path),shell=True)
+		print "\nsystem call added successfully, please restart your machine."
+	else:
+		#print "can add one more syscall by running the same."
+		if "yes"==raw_input("\nwanted add one more syscall, yes/no : "):
+			subprocess.call('/home/lunako/Documents/scripts/syscall_writer.copy.py')
+		else:
+			print "system call added successfully.\n"
+		
+	#subprocess.call(['./syscall_write_shell.sh','flags'])  this can be used when we are trying to execute the shell commands
+	
+	
+	
